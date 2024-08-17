@@ -234,7 +234,7 @@ class ClarityDataModule(LightningDataModule):
 
 
 if __name__ == '__main__':
-    """python -m data_loaders.chime3_moving"""
+    """python -m data_loaders.clarity_dataloader"""
     dset = ClarityDataset(
         target='train/scenes',
         dataset='train/scenes'
