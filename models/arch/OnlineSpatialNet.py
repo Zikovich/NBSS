@@ -1,5 +1,9 @@
 from typing import *
 
+import sys
+import os
+sys.path.append('/teamspace/studios/this_studio/NBSS')
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,11 +16,10 @@ from models.arch.base.non_linear import *
 from models.arch.base.norm import *
 from models.arch.base.retention import MultiScaleRetention, RetNetRelPos
 
-try:
-    from mamba_ssm import Mamba
-    from mamba_ssm.utils.generation import InferenceParams
-except:
-    Mamba = None
+
+from mamba_ssm import Mamba
+from mamba_ssm.utils.generation import InferenceParams
+
 
 
 class CausalConv1d(nn.Conv1d):
@@ -388,7 +391,7 @@ class OnlineSpatialNet(nn.Module):
 if __name__ == '__main__':
     # CUDA_VISIBLE_DEVICES=7, python -m models.arch.OnlineSpatialNet
     model = OnlineSpatialNet(
-        dim_input=12,
+        dim_input=6,
         dim_output=4,
         num_layers=8,
         dim_hidden=96,
@@ -405,7 +408,7 @@ if __name__ == '__main__':
     ).cuda()
     print(model)
 
-    x = torch.randn((1, 129, 251, 12)).cuda() # 6-channel, 4s, 8 kHz
+    x = torch.randn((1, 129, 251, 6)).cuda() # 6-channel, 4s, 8 kHz
     from torch.utils.flop_counter import FlopCounterMode
     with FlopCounterMode(model, display=False) as fcm:
         res = model(x, inference=True).mean()
@@ -420,7 +423,8 @@ if __name__ == '__main__':
     print(f"flops_forward={flops_forward_eval/4e9:.2f}G/s, params={params_eval/1e6:.2f} M")
 
     # check if the implementation is causal or not
-    x = torch.randn((1, 129, 1024, 12)).cuda()
+    torch.cuda.empty_cache()
+    x = torch.randn((1, 129, 1024, 6)).cuda()
     y1024 = model(x)
     y1000 = model(x[:, :, :1000, :])
     print('causal:', (y1024[:, :, :1000, :] == y1000).all().item())
