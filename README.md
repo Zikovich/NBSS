@@ -1,4 +1,4 @@
-# My contibution
+# My contribution
 
 * This is just a clone from NBSS repo to test the algorithms as well as do proper modification for better speech ehnancment.
 
