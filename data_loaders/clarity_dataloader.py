@@ -93,7 +93,7 @@ class ClarityDataset(Dataset):
         )
 
 class ClarityDataModule(LightningDataModule):
-    def __init__(self, train_json_file, test_json_file, batch_size=32, seed=42, train_data_path="", test_data_path="", num_workers=0):
+    def __init__(self, train_json_file, test_json_file, batch_size=32, seed=42, train_data_path="", test_data_path="", num_workers=0, datasets=[""]):
         super().__init__()
         self.train_json_file = train_json_file
         self.test_json_file = test_json_file
@@ -102,6 +102,7 @@ class ClarityDataModule(LightningDataModule):
         self.train_data_path = train_data_path
         self.test_data_path = test_data_path
         self.num_workers=num_workers
+        self.datasets = datasets
 
     def setup(self, stage=None):
         # Load train and validation data
