@@ -92,7 +92,7 @@ class ClarityDataset(Dataset):
             paras,
         )
 
-class ClarityDataLoader(LightningDataModule):
+class ClarityDataModule(LightningDataModule):
     def __init__(self, train_json_file, test_json_file, batch_size=32, seed=42, train_data_path="", test_data_path="", num_workers=0):
         super().__init__()
         self.train_json_file = train_json_file
@@ -142,7 +142,7 @@ def main():
     test_data_path = '/teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/dev/scenes'    # Update with the actual path to audio files
     batch_size = 1
     
-    data_module = ClarityDataLoader(train_json_file, test_json_file, batch_size, train_data_path=train_data_path, test_data_path=test_data_path, num_workers=1)
+    data_module = ClarityDataModule(train_json_file, test_json_file, batch_size, train_data_path=train_data_path, test_data_path=test_data_path, num_workers=1)
     data_module.setup()
 
     print("Train Loader:")
