@@ -134,7 +134,7 @@ class TrainModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         """training step on self.device, called automaticly by PytorchLightning"""
         x, ys, paras = batch  # x: [B,C,T], ys: [B,Spk,C,T]
-        yr = ys[:, :, self.ref_channel, :]
+        yr = ys#[:, self.ref_channel, :]
 
         yr_hat, loss_paras = self.forward(x)
 
@@ -151,7 +151,10 @@ class TrainModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         """validation step on self.device, called automaticly by PytorchLightning"""
         x, ys, paras = batch
-        yr = ys[:, :, self.ref_channel, :]
+        try:
+            yr = ys#[:, self.ref_channel, :]
+        except:
+            import pdb;pdb.post_mortem()
 
         if self.trainer.precision == '16-mixed' or self.trainer.precision == 'bf16-mixed':
             # use float 32 precision for validation and test
@@ -160,8 +163,11 @@ class TrainModule(pl.LightningModule):
             autocast.__enter__()
 
         # forward & loss
-        yr_hat, loss_paras = self.forward(x)
-        loss, perms, yr_hat = self.loss(yr_hat=yr_hat, yr=yr, reorder=True, reduce_batch=True, **loss_paras)
+        try:
+            yr_hat, loss_paras = self.forward(x)
+            loss, perms, yr_hat = self.loss(yr_hat=yr_hat, yr=yr, reorder=True, reduce_batch=True, **loss_paras)
+        except:
+            import pdb;pdb.post_mortem()
 
         # metrics
         sdr_val = sdr(yr_hat, yr).mean()
@@ -220,7 +226,7 @@ class TrainModule(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         x, ys, paras = batch
-        yr = ys[:, :, self.ref_channel, :]
+        yr = ys#[:, self.ref_channel, :]
         sample_rate = 16000 if 'sample_rate' not in paras[0] else paras[0]['sample_rate']
 
         if self.trainer.precision == '16-mixed' or self.trainer.precision == 'bf16-mixed':
@@ -285,7 +291,7 @@ class TrainModule(pl.LightningModule):
             yr = None
         else:
             x, ys, paras = batch
-            yr = ys[:, :, self.ref_channel, :] if ys[0] is not None else None
+            yr = ys#[:, self.ref_channel, :] if ys[0] is not None else None
 
         # forward & loss
         yr_hat, loss_paras = self.forward(x)

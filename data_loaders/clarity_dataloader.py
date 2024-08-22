@@ -67,6 +67,11 @@ class ClarityDataset(Dataset):
         signal_ch3 = (signal_ch3 / 32768.0).astype(np.float32)
         reference = (reference / 32768.0).astype(np.float32)
 
+        # Transpose the signals to (channel, time)
+        signal_ch1 = signal_ch1.T  # Shape becomes (2, time)
+        signal_ch2 = signal_ch2.T  # Shape becomes (2, time)
+        signal_ch3 = signal_ch3.T  # Shape becomes (2, time)
+        
         # Stack signals
         try:
             rank_zero_info(f"Shape of signal_ch1: {signal_ch1.shape}")
@@ -74,6 +79,9 @@ class ClarityDataset(Dataset):
             rank_zero_info(f"Shape of signal_ch3: {signal_ch3.shape}")
             rank_zero_info(f"Shape of reference: {reference.shape}")
             signals = np.stack([signal_ch1, signal_ch2, signal_ch3], axis=0)
+            # Reshape to (6, time)
+            signals = signals.reshape(-1, signals.shape[-1])  # Reshape to (6, time)
+            
         except:
             import pdb;pdb.post.mortem()
         reference = reference[np.newaxis, :]
@@ -85,7 +93,8 @@ class ClarityDataset(Dataset):
             'dataset': 'train',
             'snr': self.data[index].get('SNR', None)
         }
-
+        rank_zero_info(f"Shape of signals: {signals.shape}")
+        rank_zero_info(f"Shape of reference: {reference.shape}")
         return (
             torch.as_tensor(signals, dtype=torch.float32),  # shape [chn, time]
             torch.as_tensor(reference, dtype=torch.float32),  # shape [1, chn, time]
