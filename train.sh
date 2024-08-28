@@ -9,8 +9,8 @@ python SharedTrainer.py fit \
   --model.arch.num_freqs=129 \
   --trainer.precision=16-mixed \
   --model.compile=true \
-  --data.batch_size="1" \
+  --data.batch_size="3" \
   --trainer.devices=1 \
-  --trainer.max_epochs=1
+  --trainer.max_epochs=200
 
 #!/bin/bash

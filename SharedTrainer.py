@@ -27,7 +27,12 @@ from models.utils.base_cli import BaseCLI
 from models.utils.my_save_config_callback import MySaveConfigCallback as SaveConfigCallback
 from models.utils.my_earlystopping import MyEarlyStopping as EarlyStopping
 import data_loaders
+import os
 
+def save_wav(file_name, audio_data, sample_rate=22050):
+    # Assuming 'audio_data' is a numpy array or tensor representing the audio
+    from scipy.io.wavfile import write
+    write(file_name, sample_rate, audio_data)
 
 class TrainModule(pl.LightningModule):
     """Network Lightning Module, which controls the training, testing, and inference of given arch and io
@@ -96,7 +101,9 @@ class TrainModule(pl.LightningModule):
             if k == 'self' or k == '__class__' or hasattr(self, k):
                 continue
             setattr(self, k, v)
-
+        
+        # save all the hyperparameters to the checkpoint
+        self.save_hyperparameters(ignore=["model"])
     def on_train_start(self):
         """Called by PytorchLightning automatically at the start of training"""
         GS.on_train_start(self=self, exp_name=self.exp_name, model_name=self.name, num_chns=max(self.channels) + 1, nfft=self.stft.n_fft, model_class_path=self.import_path)

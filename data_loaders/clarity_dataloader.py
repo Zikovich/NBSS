@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from scipy.io import wavfile
 
 from scipy.signal import resample_poly
+from torch.utils.data import Subset
 
 import torch.nn.functional as F
 
@@ -44,7 +45,6 @@ class ClarityDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index: int):
-
         scene, listener_id = self.scene_listener_pairs[index]
 
         # Load the audio files for the selected scene
@@ -74,6 +74,7 @@ class ClarityDataset(Dataset):
         
         # Stack signals
         try:
+            rank_zero_info(f"Training sample name: {scene}")
             rank_zero_info(f"Shape of signal_ch1: {signal_ch1.shape}")
             rank_zero_info(f"Shape of signal_ch2: {signal_ch2.shape}")
             rank_zero_info(f"Shape of signal_ch3: {signal_ch3.shape}")
@@ -83,7 +84,7 @@ class ClarityDataset(Dataset):
             signals = signals.reshape(-1, signals.shape[-1])  # Reshape to (6, time)
             
         except:
-            import pdb;pdb.post.mortem()
+            import pdb;pdb.post_mortem()
         reference = reference[np.newaxis, :]
 
         paras = {
@@ -102,7 +103,8 @@ class ClarityDataset(Dataset):
         )
 
 class ClarityDataModule(LightningDataModule):
-    def __init__(self, train_json_file, test_json_file, batch_size=32, seed=42, train_data_path="", test_data_path="", num_workers=0, datasets=[""]):
+    def __init__(self, train_json_file, test_json_file, batch_size=32, seed=42, train_data_path="", test_data_path="", num_workers=0, datasets=[""],
+                 train_limit: int = None, val_limit: int = None, test_limit: int = None):
         super().__init__()
         self.train_json_file = train_json_file
         self.test_json_file = test_json_file
@@ -110,8 +112,11 @@ class ClarityDataModule(LightningDataModule):
         self.seed = seed
         self.train_data_path = train_data_path
         self.test_data_path = test_data_path
-        self.num_workers=num_workers
+        self.num_workers = num_workers
         self.datasets = datasets
+        self.train_limit = train_limit
+        self.val_limit = val_limit
+        self.test_limit = test_limit
 
     def setup(self, stage=None):
         # Load train and validation data
@@ -124,24 +129,57 @@ class ClarityDataModule(LightningDataModule):
         
         torch.manual_seed(self.seed)
         
-        val_size = int(0.2 * len(train_data))
-        train_size = len(train_data) - val_size
-        
-        self.train_dataset, self.val_dataset = random_split(
-            ClarityDataset(train_data, self.train_data_path), [train_size, val_size]
-        )
+        # Use all the data for training/testing if only one sample is available
+        total_size = len(train_data)
+        if total_size == 0:
+            raise ValueError("No data available for training.")
+
+        # Handle cases where the dataset is too small
+        val_size = int(0.2 * total_size)
+        train_size = total_size - val_size
+
+        if train_size > 0:
+            self.train_dataset, self.val_dataset = random_split(
+                ClarityDataset(train_data, self.train_data_path), [train_size, val_size]
+            )
+        else:
+            self.train_dataset = ClarityDataset(train_data, self.train_data_path)
+            self.val_dataset = None
+
         self.test_dataset = ClarityDataset(self.test_data, self.test_data_path)
+
+        # Limit datasets if necessary
+        if self.train_limit:
+            train_indices = list(range(len(self.train_dataset)))[:self.train_limit]
+            self.train_dataset = Subset(self.train_dataset, train_indices)
+
+        if self.val_limit and self.val_dataset:
+            val_indices = list(range(len(self.val_dataset)))[:self.val_limit]
+            self.val_dataset = Subset(self.val_dataset, val_indices)
+
+        if self.test_limit:
+            test_indices = list(range(len(self.test_dataset)))[:self.test_limit]
+            self.test_dataset = Subset(self.test_dataset, test_indices)
 
     def train_dataloader(self):
         rank_zero_info("Train DataLoader created.")
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=pad_collate_fn, num_workers=self.num_workers)
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=pad_collate_fn, num_workers=self.num_workers,
+        persistent_workers=True)
 
     def val_dataloader(self):
         rank_zero_info("Validation DataLoader created.")
-        return DataLoader(self.val_dataset, batch_size=self.batch_size, collate_fn=pad_collate_fn, num_workers=self.num_workers)
+        if self.val_dataset:
+            return DataLoader(self.val_dataset, batch_size=self.batch_size, collate_fn=pad_collate_fn, num_workers=self.num_workers,
+            persistent_workers=True)
+        return None
 
     def test_dataloader(self):
         rank_zero_info("Test DataLoader created.")
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, collate_fn=pad_collate_fn, num_workers=self.num_workers,
+        persistent_workers=True)
+    
+    def predict_dataloader(self):
+        rank_zero_info("Predict DataLoader created.")
         return DataLoader(self.test_dataset, batch_size=self.batch_size, collate_fn=pad_collate_fn, num_workers=self.num_workers)
 
 
@@ -151,8 +189,15 @@ def main():
     train_data_path = '/teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/train/scenes'    # Update with the actual path to audio files
     test_data_path = '/teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/dev/scenes'    # Update with the actual path to audio files
     batch_size = 1
-    
-    data_module = ClarityDataModule(train_json_file, test_json_file, batch_size, train_data_path=train_data_path, test_data_path=test_data_path, num_workers=1)
+
+    data_module = ClarityDataModule(
+        train_json_file, 
+        test_json_file, 
+        batch_size, 
+        train_data_path=train_data_path, 
+        test_data_path=test_data_path, 
+        num_workers=1
+    )
     data_module.setup()
 
     print("Train Loader:")
@@ -163,9 +208,10 @@ def main():
 
     print("Validation Loader:")
     val_loader = data_module.val_dataloader()
-    for batch in val_loader:
-        rank_zero_info("Batch:", batch)
-        break
+    if val_loader:
+        for batch in val_loader:
+            rank_zero_info("Batch:", batch)
+            break
 
     print("Test Loader:")
     test_loader = data_module.test_dataloader()

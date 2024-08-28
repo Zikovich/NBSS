@@ -1,0 +1,49 @@
+[
+    {
+        "scene": "S02022",
+        "target": {
+        "name": "T031_JXX_02281",
+        "time_start": 78636,
+        "time_end": 183153,
+        "position": 9,
+        "dataset": "train"
+        },
+        "interferers": [
+        {
+            "name": "36/900236.low.mp3",
+            "time_start": 0,
+            "time_end": 227253,
+            "position": 1,
+            "dataset": "train",
+            "type": "music",
+            "offset": 8464748
+        },
+        {
+            "name": "73/989873.low.mp3",
+            "time_start": 0,
+            "time_end": 227253,
+            "position": 11,
+            "dataset": "train",
+            "type": "music",
+            "offset": 7532543
+        },
+        {
+            "name": "52/181852.low.mp3",
+            "time_start": 0,
+            "time_end": 227253,
+            "position": 10,
+            "dataset": "train",
+            "type": "music",
+            "offset": 8333517
+        }
+        ],
+        "listener": {
+        "ID": "L016",
+        "initial_head_orientation": 1
+        },
+        "room": "R062",
+        "SNR": -9.56043882138878,
+        "duration": 227253,
+        "dataset": "train"
+    }
+]
