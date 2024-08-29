@@ -1,49 +1,49 @@
 [
     {
-        "scene": "S02022",
+        "scene": "S03955",
         "target": {
-        "name": "T031_JXX_02281",
-        "time_start": 78636,
-        "time_end": 183153,
-        "position": 9,
-        "dataset": "train"
+          "name": "T012_AT4_01293",
+          "time_start": 70639,
+          "time_end": 192355,
+          "position": 2,
+          "dataset": "train"
         },
         "interferers": [
-        {
-            "name": "36/900236.low.mp3",
+          {
+            "name": "sof_08886",
             "time_start": 0,
-            "time_end": 227253,
-            "position": 1,
+            "time_end": 236455,
+            "position": 8,
             "dataset": "train",
-            "type": "music",
-            "offset": 8464748
-        },
-        {
-            "name": "73/989873.low.mp3",
+            "type": "speech",
+            "offset": 5597661
+          },
+          {
+            "name": "sof_02121",
             "time_start": 0,
-            "time_end": 227253,
+            "time_end": 236455,
             "position": 11,
             "dataset": "train",
-            "type": "music",
-            "offset": 7532543
-        },
-        {
-            "name": "52/181852.low.mp3",
+            "type": "speech",
+            "offset": 24188232
+          },
+          {
+            "name": "CIN_kettle_030",
             "time_start": 0,
-            "time_end": 227253,
-            "position": 10,
+            "time_end": 236455,
+            "position": 9,
             "dataset": "train",
-            "type": "music",
-            "offset": 8333517
-        }
+            "type": "noise",
+            "offset": 1286740
+          }
         ],
         "listener": {
-        "ID": "L016",
-        "initial_head_orientation": 1
+          "ID": "L006",
+          "initial_head_orientation": 7
         },
-        "room": "R062",
-        "SNR": -9.56043882138878,
-        "duration": 227253,
+        "room": "R023",
+        "SNR": -7.237942785642074,
+        "duration": 236455,
         "dataset": "train"
-    }
+      }
 ]

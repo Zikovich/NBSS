@@ -4,7 +4,10 @@ data:
     train_json_file: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/metadata/scenes.train.json
     test_json_file: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/metadata/scenes.dev.json
     train_data_path: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/train/scenes
-    test_data_path: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/dev/scenes
+    test_data_path: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/train/scenes
     datasets: ["train_cec3_task2", "dev_cec3_task3", "eval_cec3_task2"]
     batch_size: [4, 8]
-    num_workers: 1 
+    train_limit: 1
+    val_limit: 1  # Limit validation set to 100 samples, None for full data
+    test_limit: 1  # Limit test set to 50 samples, None for full data
+    num_workers: 7

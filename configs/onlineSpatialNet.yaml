@@ -7,6 +7,7 @@ trainer:
   strategy: auto
   sync_batchnorm: false
   precision: 32
+  deterministic: True 
 model:
   arch:
     class_path: models.arch.OnlineSpatialNet.OnlineSpatialNet
@@ -39,7 +40,7 @@ model:
     class_path: models.io.loss.Loss
     init_args:
       loss_func: models.io.loss.neg_snr
-      pit: true
+      pit: false
   norm:
     class_path: models.io.norm.Norm
     init_args:
@@ -49,7 +50,7 @@ model:
   lr_scheduler: [ExponentialLR, { gamma: 0.99 }]
   # lr_scheduler: [ReduceLROnPlateau, {mode: max, factor: 0.5, patience: 5, min_lr: 0.0001}]
   exp_name: exp
-  metrics: [SNR, SDR, SI_SDR, NB_PESQ, WB_PESQ, eSTOI]
+  metrics: [SNR, SDR, SI_SDR, NB_PESQ, WB_PESQ, eSTOI, STOI, 'DNSMOS', 'pDNSMOS']
   val_metric: loss
 early_stopping:
   enable: false

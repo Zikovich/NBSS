@@ -75,10 +75,10 @@ class ClarityDataset(Dataset):
         # Stack signals
         try:
             rank_zero_info(f"Training sample name: {scene}")
-            rank_zero_info(f"Shape of signal_ch1: {signal_ch1.shape}")
-            rank_zero_info(f"Shape of signal_ch2: {signal_ch2.shape}")
-            rank_zero_info(f"Shape of signal_ch3: {signal_ch3.shape}")
-            rank_zero_info(f"Shape of reference: {reference.shape}")
+            # rank_zero_info(f"Shape of signal_ch1: {signal_ch1.shape}")
+            # rank_zero_info(f"Shape of signal_ch2: {signal_ch2.shape}")
+            # rank_zero_info(f"Shape of signal_ch3: {signal_ch3.shape}")
+            # rank_zero_info(f"Shape of reference: {reference.shape}")
             signals = np.stack([signal_ch1, signal_ch2, signal_ch3], axis=0)
             # Reshape to (6, time)
             signals = signals.reshape(-1, signals.shape[-1])  # Reshape to (6, time)
@@ -94,8 +94,8 @@ class ClarityDataset(Dataset):
             'dataset': 'train',
             'snr': self.data[index].get('SNR', None)
         }
-        rank_zero_info(f"Shape of signals: {signals.shape}")
-        rank_zero_info(f"Shape of reference: {reference.shape}")
+        # rank_zero_info(f"Shape of signals: {signals.shape}")
+        # rank_zero_info(f"Shape of reference: {reference.shape}")
         return (
             torch.as_tensor(signals, dtype=torch.float32),  # shape [chn, time]
             torch.as_tensor(reference, dtype=torch.float32),  # shape [1, chn, time]

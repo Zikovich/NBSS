@@ -9,8 +9,10 @@ python SharedTrainer.py fit \
   --model.arch.num_freqs=129 \
   --trainer.precision=16-mixed \
   --model.compile=true \
-  --data.batch_size="3" \
+  --data.batch_size="1" \
   --trainer.devices=1 \
-  --trainer.max_epochs=200
+  --trainer.max_epochs=200 \
+  --model.loss.init_args.loss_func=models.io.loss.neg_si_sdr \
+  --trainer.limit_val_batches=0  # Disable validation
 
 #!/bin/bash
