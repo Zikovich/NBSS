@@ -7,9 +7,12 @@ from torchmetrics.functional.audio import signal_noise_ratio as snr
 from torchmetrics.functional.audio import source_aggregated_signal_distortion_ratio as sa_sdr
 from torchmetrics.functional.audio import permutation_invariant_training as pit
 from torchmetrics.functional.audio import pit_permutate as permutate
+from torchmetrics.functional.audio import perceptual_evaluation_speech_quality as pesq_torch
+from torchmetrics.functional.audio import short_time_objective_intelligibility as stoi_torch
 from typing import *
 from models.io.cirm import build_complex_ideal_ratio_mask, decompress_cIRM
 from models.io.stft import STFT
+import torchaudio.transforms as T
 
 
 def neg_sa_sdr(preds: Tensor, target: Tensor, scale_invariant: bool = False) -> Tensor:
@@ -71,6 +74,46 @@ def cc_mse(preds: Tensor, target: Tensor) -> Tensor:
     return _mse(preds=preds, target=target)
 
 
+def neg_nb_pesq_torch(preds: Tensor, target: Tensor, fs: int = 8000) -> Tensor:
+    """calculate negative NB PESQ loss for a batch using torchmetrics
+
+    Returns:
+        loss: shape [batch], real
+    """
+    batch_size = target.shape[0]
+    pesq_vals = pesq_torch(preds=preds, target=target, fs=fs, mode='nb')
+    return -torch.mean(pesq_vals.view(batch_size, -1), dim=1)
+
+# Define the resamplers for NB (8kHz) and WB (16kHz)
+resample_to_nb = T.Resample(orig_freq=48000, new_freq=8000)
+resample_to_wb = T.Resample(orig_freq=48000, new_freq=16000)
+
+def neg_nb_pesq(preds: Tensor, target: Tensor) -> Tensor:
+    """calculate negative NB PESQ loss for a batch using torchmetrics after resampling"""
+    preds_resampled = resample_to_nb(preds)
+    target_resampled = resample_to_nb(target)
+    batch_size = target.shape[0]
+    pesq_vals = pesq_torch(preds=preds_resampled, target=target_resampled, fs=8000, mode='nb')
+    return -torch.mean(pesq_vals.view(batch_size, -1), dim=1)
+
+def neg_wb_pesq(preds: Tensor, target: Tensor) -> Tensor:
+    """calculate negative WB PESQ loss for a batch using torchmetrics after resampling"""
+    preds_resampled = resample_to_wb(preds)
+    target_resampled = resample_to_wb(target)
+    batch_size = target.shape[0]
+    pesq_vals = pesq_torch(preds=preds_resampled, target=target_resampled, fs=16000, mode='wb')
+    return -torch.mean(pesq_vals.view(batch_size, -1), dim=1)
+
+def neg_stoi(preds: Tensor, target: Tensor, fs: int = 48000, extended: bool = False) -> Tensor:
+    """calculate negative STOI loss for a batch using torchmetrics at 48 kHz
+
+    Returns:
+        loss: shape [batch], real
+    """
+    batch_size = target.shape[0]
+    stoi_vals = neg_(preds=preds, target=target, fs=fs, extended=extended)
+    return -torch.mean(stoi_vals.view(batch_size, -1), dim=1)
+
 class Loss(nn.Module):
     is_scale_invariant_loss: bool
     name: str
@@ -88,6 +131,10 @@ class Loss(nn.Module):
             neg_snr: False,
             cirm_mse: False,
             cc_mse: False,
+            neg_nb_pesq: False,
+            neg_wb_pesq: False,
+            neg_stoi: False,
+            # Add any other new loss functions here
         }[loss_func]
         self.name = loss_func.__name__
         self.mask = 'cirm' if self.loss_func == cirm_mse else None
@@ -137,3 +184,5 @@ class Loss(nn.Module):
             kwargs += f'{k}={v},'
 
         return f"loss_func={self.loss_func.__name__}({kwargs}), pit={self.pit}, mask={self.mask}"
+
+    
