@@ -1,10 +1,10 @@
 data:
   class_path: data_loaders.clarity_dataloader.ClarityDataModule
   init_args:
-    train_json_file: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/metadata/scenes.train.json
-    test_json_file: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/metadata/scenes.dev.json
-    train_data_path: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/train/scenes
-    test_data_path: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/train/scenes
+    train_json_file: /teamspace/uploads/clarity_CEC3_data/task2/clarity_data/metadata/scenes.train.json
+    test_json_file: /teamspace/uploads/clarity_CEC3_data/task2/clarity_data/metadata/scenes.dev.json
+    train_data_path: /teamspace/uploads/clarity_CEC3_data/task2/clarity_data/train/scenes
+    test_data_path: /teamspace/uploads/clarity_CEC3_data/task2/clarity_data/train/scenes
     datasets: ["train_cec3_task2", "dev_cec3_task3", "eval_cec3_task2"]
     batch_size: [4, 8]
     train_limit: 1
