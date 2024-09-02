@@ -105,6 +105,22 @@ def neg_wb_pesq(preds: Tensor, target: Tensor) -> Tensor:
     return -torch.mean(pesq_vals.view(batch_size, -1), dim=1)
 
 
+def neg_stoi_loss(preds: Tensor, target: Tensor, sample_rate: int = 48000, use_vad: bool = True, extended: bool = True, do_resample:bool = False) -> Tensor:
+    """Calculate negative STOI loss for a batch using torch_stoi's NegSTOILoss
+
+    Args:
+        preds (Tensor): Predicted audio batch
+        target (Tensor): Ground truth audio batch
+        sample_rate (int): Sample rate of the audio
+        vad (bool): Voice activity detection flag
+        extend (bool): Extend the loss function to non-standard cases
+
+    Returns:
+        Tensor: Computed negative STOI loss
+    """
+    loss_func = NegSTOILoss(sample_rate=48000, use_vad =True, extended=True, do_resample=False).to('cuda')
+    return loss_func(preds, target)
+
 class Loss(nn.Module):
     is_scale_invariant_loss: bool
     name: str
@@ -124,7 +140,7 @@ class Loss(nn.Module):
             cc_mse: False,
             neg_nb_pesq: False,
             neg_wb_pesq: False,
-            NegSTOILoss: False,  # Update with the correct reference
+            neg_stoi_loss: False,  # Updated with the correct reference
             # Add any other new loss functions here
         }[loss_func]
         self.name = loss_func.__name__
@@ -143,7 +159,8 @@ class Loss(nn.Module):
             preds, target = torch.view_as_real(out), torch.view_as_real(Yr)
         else:
             preds, target = yr_hat, yr
-
+            
+        #print(f"Calling {self.loss_func.__name__} with kwargs: {self.loss_func_kwargs}")
         perms = None
         if self.pit:
             losses, perms = pit(preds=preds, target=target, metric_func=self.loss_func, eval_func='min', mode="permutation-wise", **self.loss_func_kwargs)
