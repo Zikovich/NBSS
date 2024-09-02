@@ -31,6 +31,19 @@ SpatialNet:
 pip install -r requirements.txt
 
 # gpuRIR: check https://github.com/DavidDiazGuerra/gpuRIR
+
+#if you face issues like that mentioned in this ticket
+# https://github.com/state-spaces/mamba/issues/217
+# or 
+# https://github.com/state-spaces/mamba/issues/28
+# please check latest release from mamba
+# https://github.com/state-spaces/mamba/releases/
+
+pip install https://github.com/state-spaces/mamba/releases/download/v2.2.2/mamba_ssm-2.2.2+cu118torch2.0cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+
+# To install torch stoi to be used as loss function (Differentiable function)
+pip install --no-deps torch_stoi
+
 ```
 
 ## Generate Dataset SMS-WSJ-Plus
