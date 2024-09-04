@@ -121,6 +121,41 @@ def neg_stoi_loss(preds: Tensor, target: Tensor, sample_rate: int = 48000, use_v
     loss_func = NegSTOILoss(sample_rate=48000, use_vad =True, extended=True, do_resample=False).to('cuda')
     return loss_func(preds, target)
 
+def normalize_loss(loss, min_val, max_val):
+    return (loss - min_val) / (max_val - min_val)
+
+def combined_stoi_si_sdr_snr(preds: Tensor, target: Tensor, stoi_weight: float = 0.25, si_sdr_weight: float = 0.25, snr_weight: float = 0.50) -> Tensor:
+    """
+    Calculate a combined loss of STOI, SI-SDR, and SNR.
+
+    Args:
+        preds (Tensor): Predicted audio batch
+        target (Tensor): Ground truth audio batch
+        stoi_weight (float): Weight for the STOI loss (default 0.25)
+        si_sdr_weight (float): Weight for the SI-SDR loss (default 0.5)
+        snr_weight (float): Weight for the SNR loss (default 0.50)
+        stoi_loss_fn (callable): STOI loss function (default NegSTOILoss)
+
+    Returns:
+        Tensor: Combined loss value
+    """
+    # Ensure that weights sum to 1
+    assert stoi_weight + si_sdr_weight + snr_weight == 1.0, "stoi_weight, si_sdr_weight, and snr_weight must sum to 1.0"
+
+    # Compute the individual losses
+    stoi_loss = normalize_loss(neg_stoi_loss(preds, target), min_val=-1, max_val=0)
+    si_sdr_loss = normalize_loss(neg_si_sdr(preds, target), min_val=-60, max_val=60)  # Example range
+    snr_loss = normalize_loss(neg_snr(preds, target), min_val=-30, max_val=30)  # Example range
+    
+    combined_loss = stoi_weight * stoi_loss + si_sdr_weight * si_sdr_loss + snr_weight * snr_loss
+    return combined_loss
+
+
+    # Combine the losses
+    combined_loss = stoi_weight * stoi_loss + si_sdr_weight * si_sdr_loss + snr_weight * snr_loss
+    return combined_loss
+
+
 class Loss(nn.Module):
     is_scale_invariant_loss: bool
     name: str
@@ -140,7 +175,8 @@ class Loss(nn.Module):
             cc_mse: False,
             neg_nb_pesq: False,
             neg_wb_pesq: False,
-            neg_stoi_loss: False,  # Updated with the correct reference
+            neg_stoi_loss: False,
+            combined_stoi_si_sdr_snr: False  # Updated with the correct reference
             # Add any other new loss functions here
         }[loss_func]
         self.name = loss_func.__name__

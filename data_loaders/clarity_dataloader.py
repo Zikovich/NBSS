@@ -74,7 +74,7 @@ class ClarityDataset(Dataset):
         
         # Stack signals
         try:
-            rank_zero_info(f"Training sample name: {scene}")
+            rank_zero_info(f"sample name: {scene}")
             # rank_zero_info(f"Shape of signal_ch1: {signal_ch1.shape}")
             # rank_zero_info(f"Shape of signal_ch2: {signal_ch2.shape}")
             # rank_zero_info(f"Shape of signal_ch3: {signal_ch3.shape}")
