@@ -11,12 +11,10 @@ python SharedTrainer.py fit \
   --trainer.precision=16-mixed \
   --model.compile=true \
   --data.batch_size="4" \  # As stated in paper Changsheng Quan
-  --data.train_limit="0" \
-  --data.val_limit="0" \  # Limit validation set to 100 samples, None for full data
-  --data.test_limit="0" \
-  --trainer.devices=1 \
+  --trainer.devices=4 \
+  --data.init_args.num_workers=16 \  #num_worker = 4 * num_GPU .
+  --data.init_args.self.persistent_workers="True" \
   --trainer.max_epochs=200 \
   --model.loss.init_args.loss_func=models.io.loss.neg_snr \
-  --trainer.limit_val_batches=0  # Disable validation
 
 #!/bin/bash

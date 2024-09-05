@@ -103,7 +103,7 @@ class ClarityDataset(Dataset):
         )
 
 class ClarityDataModule(LightningDataModule):
-    def __init__(self, train_json_file, test_json_file, batch_size=32, seed=42, train_data_path="", test_data_path="", num_workers=0, datasets=[""],
+    def __init__(self, train_json_file, test_json_file, batch_size=32, seed=42, train_data_path="", test_data_path="", num_workers=0, persistent_workers=True , datasets=[""],
                  train_limit: int = None, val_limit: int = None, test_limit: int = None):
         super().__init__()
         self.train_json_file = train_json_file
@@ -117,6 +117,7 @@ class ClarityDataModule(LightningDataModule):
         self.train_limit = train_limit
         self.val_limit = val_limit
         self.test_limit = test_limit
+        self.persistent_workers = persistent_workers
 
     def setup(self, stage=None):
         # Load train and validation data
@@ -164,19 +165,19 @@ class ClarityDataModule(LightningDataModule):
     def train_dataloader(self):
         rank_zero_info("Train DataLoader created.")
         return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=pad_collate_fn, num_workers=self.num_workers,
-        persistent_workers=True)
+        persistent_workers=self.persistent_workers )
 
     def val_dataloader(self):
         rank_zero_info("Validation DataLoader created.")
         if self.val_dataset:
             return DataLoader(self.val_dataset, batch_size=self.batch_size, collate_fn=pad_collate_fn, num_workers=self.num_workers,
-            persistent_workers=True)
+            persistent_workers=self.persistent_workers )
         return None
 
     def test_dataloader(self):
         rank_zero_info("Test DataLoader created.")
         return DataLoader(self.test_dataset, batch_size=self.batch_size, collate_fn=pad_collate_fn, num_workers=self.num_workers,
-        persistent_workers=True)
+        persistent_workers=self.persistent_workers )
     
     def predict_dataloader(self):
         rank_zero_info("Predict DataLoader created.")
