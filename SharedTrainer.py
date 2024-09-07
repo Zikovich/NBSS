@@ -1,5 +1,6 @@
 from models.utils.base_cli import BaseCLI
 # import BaseCLI at the beginning
+from pytorch_lightning.utilities.rank_zero import (rank_zero_info, rank_zero_warn)
 
 import os
 from typing import *
@@ -140,6 +141,7 @@ class TrainModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         """training step on self.device, called automaticly by PytorchLightning"""
+        rank_zero_info(f"training_step batch_idx: {batch_idx}")
         x, ys, paras = batch  # x: [B,C,T], ys: [B,Spk,C,T]
         yr = ys#[:, self.ref_channel, :]
 
@@ -157,6 +159,7 @@ class TrainModule(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         """validation step on self.device, called automaticly by PytorchLightning"""
+        rank_zero_info(f"validation_step batch_idx: {batch_idx}")
         x, ys, paras = batch
         try:
             yr = ys#[:, self.ref_channel, :]
@@ -232,6 +235,7 @@ class TrainModule(pl.LightningModule):
         GS.on_test_epoch_end(self=self, results=self.results, cpu_metric_input=self.cpu_metric_input, exp_save_path=self.exp_save_path)
 
     def test_step(self, batch, batch_idx):
+        rank_zero_info(f"test_step batch_idx: {batch_idx}")
         x, ys, paras = batch
         yr = ys#[:, self.ref_channel, :]
         sample_rate = 16000 if 'sample_rate' not in paras[0] else paras[0]['sample_rate']

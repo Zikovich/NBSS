@@ -103,12 +103,11 @@ class ClarityDataset(Dataset):
         )
 
 class ClarityDataModule(LightningDataModule):
-    def __init__(self, train_json_file, test_json_file, batch_size=32, seed=42, train_data_path="", test_data_path="", num_workers=0, persistent_workers=True , datasets=[""],
+    def __init__(self, train_json_file, test_json_file, batch_size: List[int] = [1, 1], seed=42, train_data_path="", test_data_path="", num_workers=0, persistent_workers=True , datasets=[""],
                  train_limit: int = None, val_limit: int = None, test_limit: int = None):
         super().__init__()
         self.train_json_file = train_json_file
         self.test_json_file = test_json_file
-        self.batch_size = batch_size
         self.seed = seed
         self.train_data_path = train_data_path
         self.test_data_path = test_data_path
@@ -118,6 +117,10 @@ class ClarityDataModule(LightningDataModule):
         self.val_limit = val_limit
         self.test_limit = test_limit
         self.persistent_workers = persistent_workers
+
+        self.batch_size = batch_size
+        while len(self.batch_size) < 4:
+            self.batch_size.append(1)
 
     def setup(self, stage=None):
         # Load train and validation data
@@ -164,24 +167,24 @@ class ClarityDataModule(LightningDataModule):
 
     def train_dataloader(self):
         rank_zero_info("Train DataLoader created.")
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=pad_collate_fn, num_workers=self.num_workers,
+        return DataLoader(self.train_dataset, batch_size=self.batch_size[0], shuffle=True, collate_fn=pad_collate_fn, num_workers=self.num_workers,
         persistent_workers=self.persistent_workers )
 
     def val_dataloader(self):
         rank_zero_info("Validation DataLoader created.")
         if self.val_dataset:
-            return DataLoader(self.val_dataset, batch_size=self.batch_size, collate_fn=pad_collate_fn, num_workers=self.num_workers,
+            return DataLoader(self.val_dataset, batch_size=self.batch_size[1], collate_fn=pad_collate_fn, num_workers=self.num_workers,
             persistent_workers=self.persistent_workers )
         return None
 
     def test_dataloader(self):
         rank_zero_info("Test DataLoader created.")
-        return DataLoader(self.test_dataset, batch_size=self.batch_size, collate_fn=pad_collate_fn, num_workers=self.num_workers,
+        return DataLoader(self.test_dataset, batch_size=self.batch_size[2], collate_fn=pad_collate_fn, num_workers=self.num_workers,
         persistent_workers=self.persistent_workers )
     
     def predict_dataloader(self):
         rank_zero_info("Predict DataLoader created.")
-        return DataLoader(self.test_dataset, batch_size=self.batch_size, collate_fn=pad_collate_fn, num_workers=self.num_workers)
+        return DataLoader(self.test_dataset, batch_size=self.batch_size[3], collate_fn=pad_collate_fn, num_workers=self.num_workers)
 
 
 def main():

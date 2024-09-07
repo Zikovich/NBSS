@@ -13,6 +13,8 @@ python SharedTrainer.py fit \
   --trainer.devices=1 \
   --trainer.max_epochs=200 \
   --model.loss.init_args.loss_func=models.io.loss.neg_si_sdr \
-  --trainer.limit_val_batches=0  # Disable validation
+  --data.init_args.train_limit=1 \
+  --data.init_args.val_limit=1 \
+  --data.init_args.test_limit=1 \
 
 #!/bin/bash

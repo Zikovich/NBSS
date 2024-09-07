@@ -75,6 +75,9 @@ for loss_func in "${loss_functions[@]}"; do
     --data.batch_size="1" \
     --trainer.devices=1 \
     --trainer.max_epochs=200 \
+    --data.init_args.train_limit=1 \
+    --data.init_args.val_limit=1 \
+    --data.init_args.test_limit=1 \
     $extra_args
 
   echo "Finished training with loss function: $loss_func"
