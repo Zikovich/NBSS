@@ -2,7 +2,8 @@ jsonargparse[signatures,urls]>=4.3.1
 torchmetrics[audio]
 omegaconf
 pytorch-lightning>=2.0.0
-torch>=1.12.1
+torch==2.2.1
+torchaudio==2.2.1
 rich
 mir_eval
 soundfile
