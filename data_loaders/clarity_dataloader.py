@@ -67,6 +67,14 @@ class ClarityDataset(Dataset):
         signal_ch3 = (signal_ch3 / 32768.0).astype(np.float32)
         reference = (reference / 32768.0).astype(np.float32)
 
+        # Resample the signals to 8000 Hz using resample_poly
+        target_sample_rate = 8000  # Desired sample rate
+        if sample_rate != target_sample_rate:
+            signal_ch1 = resample_poly(signal_ch1, up=target_sample_rate, down=sample_rate, axis=0)
+            signal_ch2 = resample_poly(signal_ch2, up=target_sample_rate, down=sample_rate, axis=0)
+            signal_ch3 = resample_poly(signal_ch3, up=target_sample_rate, down=sample_rate, axis=0)
+            reference = resample_poly(reference, up=target_sample_rate, down=sample_rate, axis=0)
+
         # Transpose the signals to (channel, time)
         signal_ch1 = signal_ch1.T  # Shape becomes (2, time)
         signal_ch2 = signal_ch2.T  # Shape becomes (2, time)
@@ -90,7 +98,7 @@ class ClarityDataset(Dataset):
         paras = {
             'index': index,
             'target': self.data[index]['target'],
-            'sample_rate': sample_rate,
+            'sample_rate': target_sample_rate,
             'dataset': 'train',
             'snr': self.data[index].get('SNR', None)
         }

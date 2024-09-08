@@ -1,0 +1,57 @@
+seed_everything: 2
+
+trainer:
+  gradient_clip_val: 1
+  gradient_clip_algorithm: norm
+  devices: 1                             # Specify the number of devices (GPUs)
+  accelerator: gpu                       # Explicitly set to use GPU
+  strategy:
+    class_path: pytorch_lightning.strategies.DeepSpeedStrategy
+    init_args:
+      stage: 2                           # Use ZeRO Stage 2
+      offload_optimizer: true             # Enable offloading optimizer states to CPU
+      offload_parameters: true            # Enable offloading parameters to CPU
+      offload_optimizer_device: cpu       # Specify the device for optimizer offload (CPU)
+      offload_params_device: cpu          # Specify the device for parameter offload (CPU)
+      cpu_checkpointing: true             # Enable CPU checkpointing
+  precision: 16-mixed                    # Use mixed precision (float16 and float32)
+  deterministic: true                    # Ensures reproducibility
+
+model:
+  arch:
+    class_path: models.arch.OnlineSpatialNet.OnlineSpatialNet
+    init_args:
+      num_layers: 8
+      encoder_kernel_size: 5
+      dim_hidden: 96
+      dim_ffn: 192
+      num_heads: 4
+      dropout: [0, 0, 0]
+      kernel_size: [5, 3]
+      conv_groups: [8, 8]
+      norms: ["LN", "LN", "GN", "LN", "LN", "LN"]
+      dim_squeeze: 8
+      full_share: 0
+      attention: mamba(16,4)
+      decay: [4, 5, 9, 10]
+      rope: false
+  channels: [0, 1, 2, 3, 4, 5]
+  ref_channel: 0
+  stft:
+    class_path: models.io.stft.STFT
+    init_args:
+      n_fft: 256
+      n_hop: 128
+  loss:
+    class_path: models.io.loss.Loss
+    init_args:
+      loss_func: models.io.loss.neg_snr
+      pit: false
+  norm:
+    class_path: models.io.norm.Norm
+    init_args:
+      mode: utterance
+      online: true
+  lr_scheduler: [ExponentialLR, { gamma: 0.99 }] # it is defined internally
+
+# Removed the "optimizer" definition from the YAML, let Lightning handle it
