@@ -7,7 +7,9 @@ trainer:
   strategy: auto
   sync_batchnorm: false
   precision: 32
-  deterministic: True 
+  deterministic: True
+  callbacks:
+    - class_path: GarbageCollectionCallback
 model:
   arch:
     class_path: models.arch.OnlineSpatialNet.OnlineSpatialNet
@@ -58,3 +60,4 @@ early_stopping:
   patience: 10
   mode: max
   min_delta: 0.1
+
