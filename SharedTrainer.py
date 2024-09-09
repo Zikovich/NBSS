@@ -18,6 +18,8 @@ from torchmetrics.functional.audio import \
 from torchmetrics.functional.audio import signal_distortion_ratio as sdr
 from pytorch_lightning.cli import LightningArgumentParser
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.utilities.memory import garbage_collection_cuda
+
 
 import models.utils.general_steps as GS
 from models.io.loss import *
@@ -386,6 +388,11 @@ class TrainCLI(BaseCLI):
         parser.set_defaults(model_checkpoint_defaults)
 
         self.add_model_invariant_arguments_to_parser(parser)
+
+
+class GarbageCollectionCallback(pl.Callback):
+    def on_train_epoch_end(self, trainer, pl_module):
+        garbage_collection_cuda()
 
 
 if __name__ == '__main__':
