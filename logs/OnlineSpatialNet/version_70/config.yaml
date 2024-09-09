@@ -3,7 +3,7 @@ seed_everything: 2
 trainer:
   accelerator: gpu
   strategy: ddp
-  devices: '8'
+  devices: '4'
   num_nodes: 1
   precision: 16-mixed
   logger: null
@@ -20,7 +20,7 @@ trainer:
   limit_predict_batches: null
   overfit_batches: 0.0
   val_check_interval: null
-  check_val_every_n_epoch: 1
+  check_val_every_n_epoch: 4
   num_sanity_val_steps: null
   log_every_n_steps: null
   enable_checkpointing: null
@@ -158,19 +158,19 @@ model_checkpoint:
   every_n_epochs: 1
   save_on_train_epoch_end: null
   enable_version_counter: true
-ckpt_path: /teamspace/studios/this_studio/NBSS/logs/OnlineSpatialNet/version_69/checkpoints/last-v1.ckpt
+ckpt_path: /teamspace/studios/this_studio/NBSS/logs/OnlineSpatialNet/version_70/checkpoints/last.ckpt
 data:
   class_path: data_loaders.clarity_dataloader.ClarityDataModule
   init_args:
     train_json_file: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/metadata/scenes.train.json
     test_json_file: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/metadata/scenes.dev.json
     batch_size:
-    - 1
-    - 1
+    - 4
+    - 4
     seed: 42
     train_data_path: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/train/scenes
-    test_data_path: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/dev/scenes
-    num_workers: 22
+    test_data_path: /teamspace/studios/this_studio/clarity_CEC3_data/task2/clarity_data/train/scenes
+    num_workers: 11
     persistent_workers: true
     datasets:
     - train_cec3_task2
