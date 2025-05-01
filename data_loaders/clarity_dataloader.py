@@ -36,10 +36,12 @@ def pad_collate_fn(batch):
     return signals, references, paras
 
 class ClarityDataset(Dataset):
-    def __init__(self, data, data_path):
+    def __init__(self, data, data_path, model_channels = None, data_rate = 8000):
         self.data = data
         self.data_path = data_path
         self.scene_listener_pairs = [(item['scene'], item['listener']['ID']) for item in self.data]
+        self.model_channels = model_channels
+        self.data_rate = data_rate
 
     def __len__(self):
         return len(self.data)
@@ -68,7 +70,7 @@ class ClarityDataset(Dataset):
         reference = (reference / 32768.0).astype(np.float32)
 
         # Resample the signals to 8000 Hz using resample_poly
-        target_sample_rate = 8000  # Desired sample rate
+        target_sample_rate = self.data_rate  # Desired sample rate
         if sample_rate != target_sample_rate:
             signal_ch1 = resample_poly(signal_ch1, up=target_sample_rate, down=sample_rate, axis=0)
             signal_ch2 = resample_poly(signal_ch2, up=target_sample_rate, down=sample_rate, axis=0)
@@ -81,18 +83,22 @@ class ClarityDataset(Dataset):
         signal_ch3 = signal_ch3.T  # Shape becomes (2, time)
         
         # Stack signals
-        try:
-            rank_zero_info(f"sample name: {scene}")
-            # rank_zero_info(f"Shape of signal_ch1: {signal_ch1.shape}")
-            # rank_zero_info(f"Shape of signal_ch2: {signal_ch2.shape}")
-            # rank_zero_info(f"Shape of signal_ch3: {signal_ch3.shape}")
-            # rank_zero_info(f"Shape of reference: {reference.shape}")
-            signals = np.stack([signal_ch1, signal_ch2, signal_ch3], axis=0)
-            # Reshape to (6, time)
-            signals = signals.reshape(-1, signals.shape[-1])  # Reshape to (6, time)
+        #try:
+        #rank_zero_info(f"sample name: {scene}")
+        # rank_zero_info(f"Shape of signal_ch1: {signal_ch1.shape}")
+        # rank_zero_info(f"Shape of signal_ch2: {signal_ch2.shape}")
+        # rank_zero_info(f"Shape of signal_ch3: {signal_ch3.shape}")
+        # rank_zero_info(f"Shape of reference: {reference.shape}")
+        signals = np.stack([signal_ch1, signal_ch2, signal_ch3], axis=0)
+        # Reshape to (6, time)
+        signals = signals.reshape(-1, signals.shape[-1])  # Reshape to (6, time)
+
+        # If model_channels is provided, select only the desired channels
+        if self.model_channels is not None:
+            signals = signals[self.model_channels, :]  # Select only the specified channels
             
-        except:
-            import pdb;pdb.post_mortem()
+        #except:
+        #    import pdb;pdb.post_mortem()
         reference = reference[np.newaxis, :]
 
         paras = {
@@ -112,7 +118,7 @@ class ClarityDataset(Dataset):
 
 class ClarityDataModule(LightningDataModule):
     def __init__(self, train_json_file, test_json_file, batch_size: List[int] = [1, 1], seed=42, train_data_path="", test_data_path="", num_workers=0, persistent_workers=True , datasets=[""],
-                 train_limit: int = None, val_limit: int = None, test_limit: int = None):
+                 train_limit: int = None, val_limit: int = None, test_limit: int = None, model_channels:List[int] = None, data_rate:int=8000):
         super().__init__()
         self.train_json_file = train_json_file
         self.test_json_file = test_json_file
@@ -125,6 +131,8 @@ class ClarityDataModule(LightningDataModule):
         self.val_limit = val_limit
         self.test_limit = test_limit
         self.persistent_workers = persistent_workers
+        self.model_channels = model_channels
+        self.data_rate = data_rate
 
         self.batch_size = batch_size
         while len(self.batch_size) < 4:
@@ -151,11 +159,15 @@ class ClarityDataModule(LightningDataModule):
         train_size = total_size - val_size
 
         if train_size > 0:
-            self.train_dataset, self.val_dataset = random_split(
-                ClarityDataset(train_data, self.train_data_path), [train_size, val_size]
-            )
+            # self.train_dataset, self.val_dataset = random_split(
+            #     ClarityDataset(train_data, self.train_data_path, self.model_channels, self.data_rate), [train_size, val_size]
+            # )
+
+            self.train_dataset = ClarityDataset(train_data, self.train_data_path, self.model_channels, self.data_rate)
+            self.val_dataset = ClarityDataset(self.test_data, self.test_data_path, self.model_channels, self.data_rate)
+
         else:
-            self.train_dataset = ClarityDataset(train_data, self.train_data_path)
+            self.train_dataset = ClarityDataset(train_data, self.train_data_path, self.model_channels)
             self.val_dataset = None
 
         self.test_dataset = ClarityDataset(self.test_data, self.test_data_path)

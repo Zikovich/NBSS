@@ -109,7 +109,7 @@ class TrainModule(pl.LightningModule):
         self.save_hyperparameters(ignore=["model"])
     def on_train_start(self):
         """Called by PytorchLightning automatically at the start of training"""
-        GS.on_train_start(self=self, exp_name=self.exp_name, model_name=self.name, num_chns=max(self.channels) + 1, nfft=self.stft.n_fft, model_class_path=self.import_path)
+        GS.on_train_start(self=self, exp_name=self.exp_name, model_name=self.name, num_chns=len(self.channels), nfft=self.stft.n_fft, model_class_path=self.import_path)
 
     def forward(self, x: Tensor, istft: bool = True) -> Tuple[Tensor, Any]:
         """
